@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const xml2js = require('xml2js');
 const app = express();
-const port = 3000;
+const port = process.env.PORT
 const path = require('path');
 
 // Serve static files from the 'public' directory
