@@ -49,9 +49,17 @@ function parseXml(xmlData, callback) {
                                                 const left = Math.min(points[0][0], points[1][0], points[2][0], points[3][0]);
                                                 const width = Math.max(points[0][0], points[1][0], points[2][0], points[3][0]) - left;
                                                 const height = Math.max(points[0][1], points[1][1], points[2][1], points[3][1]) - top;
-                                                if (l._) {
+                                                if (l._ !== undefined) {
                                                     transcription.textData.push({
                                                         text: l._,
+                                                        top,
+                                                        left,
+                                                        width,
+                                                        height
+                                                    });
+                                                } else if (l !== undefined) {
+                                                    transcription.textData.push({
+                                                        text: l,
                                                         top,
                                                         left,
                                                         width,
