@@ -43,6 +43,7 @@ function parseXml(xmlData, callback) {
                                     };
                                     if (lg.l && Array.isArray(lg.l)) {
                                         lg.l.forEach(l => {
+                                            console.log('Processing line:', l);
                                             if (zone.$ && zone.$.points) {
                                                 const points = zone.$.points.split(' ').map(point => point.split(',').map(Number));
                                                 const top = Math.min(points[0][1], points[1][1], points[2][1], points[3][1]);
@@ -68,6 +69,8 @@ function parseXml(xmlData, callback) {
                                                 } else {
                                                     console.log('No text data found for line:', l);
                                                 }
+                                            } else {
+                                                console.log('No points data found for zone:', zone);
                                             }
                                         });
                                     }
