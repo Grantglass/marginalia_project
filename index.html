@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transcription Viewer</title>
+    <!-- Add any CSS files here -->
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <style>
+        .image-container {
+            position: relative;
+            display: inline-block;
+        }
+        .transcription {
+            position: absolute;
+            color: white;
+            text-shadow: 2px 2px 4px #000000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Transcription Viewer</h1>
+    <div id="transcription-container">
+        <!-- The image and canvas elements will be added here by the script -->
+    </div>
+    <!-- Add any JavaScript files here -->
+    <script src="script.js"></script>
+    <script src="client.js"></script>
+    <script>
+        // Fetch the transcription data
+        fetch('/transcriptions')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const container = document.getElementById('transcription-container');
+    
+                // Create an image and a text element for each transcription
+                data.forEach(t => {
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'image-container';
+    
+                    const img = document.createElement('img');
+                    img.src = t.image;
+                    img.alt = t.id;
+                    img.style.width = '100%'; // Set the width of the image to 100%
+                    img.onerror = function() {
+                        console.error(`Failed to load image: ${t.image}`);
+                    };
+                    img.onclick = function() { onImageClick(t.id); };
+                    imageContainer.appendChild(img);
+    
+                    t.textData.forEach(td => {
+                        const text = document.createElement('div');
+                        text.className = 'transcription';
+                        text.style.left = `${td.left}%`; // Set the left style to the left value as a percentage
+                        text.style.top = `${td.top}%`; // Set the top style to the top value as a percentage
+                        text.style.width = `${td.width}%`; // Set the width style to the width value as a percentage
+                        text.style.height = `${td.height}%`; // Set the height style to the height value as a percentage
+                        text.textContent = td.text;
+                        imageContainer.appendChild(text);
+                    });
+    
+                    container.appendChild(imageContainer);
+                });
+            })
+            .catch(e => console.error('Failed to fetch transcription data:', e));
+    </script>
+</body>
+</html>

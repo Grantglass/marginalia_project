@@ -1,0 +1,197 @@
+<bad id="bb749.1.ms.03" justify="left" type="ms" work="Books Owned, Watson" copy="1" copyid="1" institution="huntington"
+    catalog="bentley" catid="749.1.ms.3" hidden="false">
+    
+    <objdesc>
+        <source>
+            <objdescid>
+                <objtitle>
+                    <title type="transcribed">
+                        <hi rend="i">Books Owned, Watson</hi>
+                    </title>
+                </objtitle>
+                <origination>William Blake <role>author</role>. </origination>
+                <imprint>
+                    <publisher>Not Published</publisher>
+                    <pubplace>London?</pubplace>
+                    <date>1791</date>
+                </imprint>
+                <compdate value="1791">???</compdate>
+            </objdescid>
+            <objinfo>
+                <printdate value="1791">????</printdate>
+                <numberobj>23</numberobj>
+                <objorder>1-23</objorder>
+                <objsize>???</objsize>
+                <numberleaves>???</numberleaves>
+                <leafsize>???</leafsize>
+                <medium>Ink and pencil</medium>
+                <printingstyle>???</printingstyle>
+                <inkcolor>black</inkcolor>
+                <support>????</support>
+                <watermark>none</watermark>
+                <binding>???</binding>
+            </objinfo>
+            <provenance n="1">
+                <name>???y</name>
+                <date>???</date>
+                <dealer>???</dealer>
+                <price>???</price>
+                <note>???</note>
+            </provenance>
+            <repository>
+                <institution>???</institution>
+                <addressline>???</addressline>
+                <addressline>???</addressline>
+                <addressline>???</addressline>
+                <lb/>
+                <addressline>???</addressline>
+                <addressline>???</addressline>
+                <addressline>???</addressline>
+                <addressline>???</addressline>
+                <addressline>???</addressline>
+                <lb/>
+                <department>???</department>
+                <collection>???</collection>
+                <repositoryid label="Accession number">???</repositoryid>
+                <lb/>
+                <lb/>
+            </repository>
+        </source>
+        
+        
+        <desc id="bb749.1.ms.01" dbi="BB749.1.titlepg-v+preface.MS">
+            <objtitle>
+                <title type="transcribed">Books Owned, Watson</title>
+                <objid>
+                    <objnumber code="A1">Object 1</objnumber>
+                    <objcode code="B1">(Bentley 749.1)</objcode>
+                </objid>
+            </objtitle>
+            <physdesc>
+                <objsize>29.6 x 22.2cm</objsize>
+                <windowsize width="500" height="615"/>
+            </physdesc>
+            <phystext>
+                <zone type="original">
+                    <zone type="page-right" points="4890,630 4882,4175 2950,4187 2950,625">
+                        <lg justify="left">
+                            <l n="bb749.1.ms.01" justify="left"><hr width="50" align="left" indent="1"/></l>
+                            <l n="bb749.1.ms.01" justify="left" indent="10">THIS edition of the Apology for</l>
+                            <l n="bb749.1.ms.01" justify="left">the Bible is published, in compliance with the</l>
+                            <l n="bb749.1.ms.01" justify="left">earnest solicitations of many serious persons of all</l>
+                            <l n="bb749.1.ms.01" justify="left">ranks. They have remarked to me, that the <choice><orig>deis-</orig><reg type="split_word">deistical</reg></choice></l>
+                            <l n="bb749.1.ms.01" justify="left"><choice><orig>tical</orig><reg type="split_word">deistical</reg></choice> writings of Mr. Paine are circulated, with</l>
+                            <l n="bb749.1.ms.01" justify="left">great and pernicious industry, amongst the <choice><orig>un-</orig><reg type="split_word">unlearned</reg></choice></l>
+                            <l n="bb749.1.ms.01" justify="left"><choice><orig>learned</orig><reg type="split_word">unlearned</reg></choice> part of the community, especially in large</l>
+                            <l n="bb749.1.ms.01" justify="left">manufacturing towns; and they have been pleased</l>
+                            <l n="bb749.1.ms.01" justify="left">to think, that this <choice><orig>Defence</orig><reg>Defense</reg></choice> of Revealed Religion</l>
+                            <l n="bb749.1.ms.01" justify="left">might, if generally distributed, be efficacious in</l>
+                            <l n="bb749.1.ms.01" justify="left">stopping that torrent of infidelity which endangers</l>
+                            <l n="bb749.1.ms.01" justify="left">alike the future happiness of individuals, and the</l>
+                            <l n="bb749.1.ms.01" justify="left">present safety of <hi rend="u">all christian states.</hi> Whatever</l>
+                            <l n="bb749.1.ms.01" justify="left">weight there may be in this their opinion of the</l>
+                            <l n="bb749.1.ms.01" justify="left">utility of publishing a cheap edition of this work,</l>
+                            <l n="bb749.1.ms.01" justify="left">I have great pleasure in complying with their</l>
+                            <l n="bb749.1.ms.01" justify="left">wishes. Books in support of religion are, in <choice><orig>ge-</orig><reg type="split_word">general</reg></choice></l>
+                            <l n="bb749.1.ms.01" justify="left"><choice><orig>neral</orig><reg type="split_word">general</reg></choice>, read with less eagerness, and remembered</l>
+                            <l n="bb749.1.ms.01" justify="left">with greater difficulty, than those are which<choice><orig>favour</orig><reg>favor</reg></choice></l>
+                            <l n="bb749.1.ms.01" justify="left">infidelity; and the reason is obvious&#8212;men readily</l>
+                            <l n="bb749.1.ms.01" justify="left">believe what they wish, and the christian religion</l>
+                            <l n="bb749.1.ms.01" justify="left">being opposite to fraudulent dealings in our <choice><orig>inter-</orig><reg type="split_word">intercourse</reg></choice></l>
+                            <l n="bb749.1.ms.01" justify="left"><choice><orig>course</orig><reg type="split_word">intercourse</reg></choice> with others, to intemperance in the <choice><orig>gratifi-</orig><reg type="split_word">gratification</reg></choice></l>
+                            <l n="bb749.1.ms.01" justify="left"><choice><orig>cation</orig><reg type="split_word">gratification</reg></choice> of our own appetites, to all the sins, crimes,</l>
+                            <l n="bb749.1.ms.01" justify="left">and vices which men are prone to, it cannot be a</l>
+                            <l n="bb749.1.ms.01" justify="left">matter of surprise that many profligate, many</l>
+                            <l n="bb749.1.ms.01" justify="left">thoughtless persons should listen with greediness to</l>
+                            <l n="bb749.1.ms.01" justify="left">whatever tends to free them from it's influence.</l>
+                            <vspace extent="1"/>
+                            <l n="bb749.1.ms.01" justify="left" indent="5">Calgarth Park,</l>
+                            <l n="bb749.1.ms.01" justify="left" indent="5"><hi rend="i">May</hi> 10, 1796.</l>
+                        </lg>
+                    </zone>
+                </zone>
+                <zone type="Blake">
+                    <zone type="marginalia-1" points="2607,25 2638,4543 38,4556 63,0">
+                        <lg justify="left">
+                            <l n="bb749.1.ms.01.01" justify="left" indent="5">Notes on the B of L's Apology for the Bible</l>
+                            <l n="bb749.1.ms.01.02" justify="left" indent="15">by William Blake</l>
+                            <l n="bb749.1.ms.01.03" justify="left" indent="3">To defend the Bible in this year 1798</l>
+                            <vspace extent="1"/>
+                            <l n="bb749.1.ms.01.04" justify="left">would cost a man his life</l>
+                            <l n="bb749.1.ms.01.05" justify="left"><del type="overstrike_pencil">The Beast &#38; the Whore rule without control</del> 
+                                <note>Erdman reads an "s" after "control" (*The Complete Poetry and Prose of William Blake*, page 611). Bentley notes that this sentence is deleted with a pencil mark (*Writings* Volume 2, page 1404)</note>
+                                <gap reason="cancellation" extent="3" unit="character"/></l>
+                            <l n="bb749.1.ms.01.06" justify="left">It is an easy matter for a Bishop to triumph</l>
+                            <l n="bb749.1.ms.01.07" justify="left">over
+                                <choice>
+                                    <orig>Paines</orig>
+                                    <reg>Paine's</reg>
+                                </choice>
+                                attack but it is not so easy
+                                <note>Erdman (611) reads "it is" for "is is".</note></l>
+                            <l n="bb749.1.ms.01.08" justify="left">for one who loves the Bible</l>
+                            <l n="bb749.1.ms.01.09" justify="left">The Perversions of
+                                <choice>
+                                    <orig>Christs</orig>
+                                    <reg>Christ's</reg>
+                                </choice>
+                                words &#38; acts</l>
+                            <l n="bb749.1.ms.01.10" justify="left">are 
+                                <choice>
+                                    <orig>attackd</orig>
+                                    <reg>attacked</reg>
+                                </choice>
+                                by Paine &#38; also the perversions
+                            <note>Bentley reads "attacked" for "attackd" (*Writings* volume 2, page 1404).</note></l>
+                            <l n="bb749.1.ms.01.11" justify="left">of the Bible; Who dare defend <del type="overstrike">them</del> either the
+                                <note>Bentley reads "Dare" for "dare" (*Writings* volume 2, page 1404).</note></l>
+                            <l n="bb749.1.ms.01.12" justify="left">Acts of Christ or the Bible Unperverted?</l>
+                            <l n="bb749.1.ms.01.13" justify="left" indent="3">But to him who sees this mortal pilgrimage in</l>
+                            <l n="bb749.1.ms.01.14" justify="left">the light that I see it. Duty to 
+                                <subst><del type="overstrike">my</del><add place="supralinear">his</add></subst>
+                                country</l>
+                            <l n="bb749.1.ms.01.15" justify="left">is the first consideration &#38; safety the last</l>
+                            <l n="bb749.1.ms.01.16" justify="left" indent="3">Read patiently take not up this Book in an idle</l>
+                            <l n="bb749.1.ms.01.17" justify="left">hour the consideration of these things is the <gap reason="cancellation" extent="4" unit="character"/></l>
+                            <l n="bb749.1.ms.01.18" justify="left">whole duty of man &#38; the affairs of life &#38;</l>
+                            <l n="bb749.1.ms.01.19" justify="left" indent="30"><add place="supralinear">But</add></l>
+                            <l n="bb749.1.ms.01.19" justify="left">death trifles sports of time <add place="infralinear">^</add>these considerations
+                                <note>Bentley notes that the words "are the" have been omitted (*Writings* volume 2, page 1404).</note></l>
+                            <l n="bb749.1.ms.01.20" justify="left">business of Eternity</l>
+                            <l n="bb749.1.ms.01.21" justify="left" indent="1">I have been commanded from Hell not to print</l>
+                            <l n="bb749.1.ms.01.22" justify="left">this as it is what our Enemies wish</l>
+                        </lg>
+                    </zone>
+                    <zone type="marginalia-2" points="5044,25 5032,525 2813,550 2813,25">
+                        <lg justify="left">
+                            <l n="bb749.1.ms.01.01" justify="left">Paine has not Attacked Christianity</l>
+                            <l n="bb749.1.ms.01.02" justify="left">Watson has Defended Antichrist</l>
+                        </lg>
+                    </zone>
+                </zone>
+            </phystext>
+        </desc>
+        
+         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+             
+        
+        
+        
+        
+    </objdesc>
+</bad>
