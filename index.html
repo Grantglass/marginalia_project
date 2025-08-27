@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transcription Viewer</title>
     <!-- Add any CSS files here -->
     <link rel="stylesheet" type="text/css" href="styles.css">
@@ -40,22 +42,145 @@
         .transcription-hotspot {
             position: absolute;
             cursor: pointer;
-            background: rgba(255, 0, 0, 0.05);
-            border: 1px solid rgba(255, 0, 0, 0.2);
-            transition: background 0.2s ease;
+            background: transparent;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            z-index: 10;
         }
         
         .transcription-hotspot:hover {
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid rgba(255, 0, 0, 0.4);
+            background: rgba(255, 255, 0, 0.1);
+            border: 1px dashed rgba(255, 255, 0, 0.6);
+        }
+        
+        .image-container:hover .transcription-hotspot {
+            opacity: 1;
+            border: 1px dashed rgba(200, 200, 200, 0.4);
+        }
+        
+        .image-container:hover .transcription-hotspot:hover {
+            background: rgba(255, 255, 0, 0.15);
+            border: 1px dashed rgba(255, 255, 0, 0.8);
         }
         
         .transcription.visible {
             opacity: 1;
+            transform: scale(1.02);
+        }
+        
+        .show-all-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 1000;
+            transition: background 0.3s ease;
+        }
+        
+        .show-all-toggle:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        .show-all-active .transcription {
+            opacity: 0.7;
+        }
+        
+        .show-all-active .transcription:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        /* Color coding for different types of marginalia */
+        .transcription.type-criticism {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.9);
+        }
+        
+        .transcription.type-reference {
+            border-color: #3498db;
+            background: rgba(52, 152, 219, 0.9);
+        }
+        
+        .transcription.type-correction {
+            border-color: #f39c12;
+            background: rgba(243, 156, 18, 0.9);
+        }
+        
+        .transcription.type-note {
+            border-color: #27ae60;
+            background: rgba(46, 204, 113, 0.9);
+        }
+        
+        /* Hotspot color coding */
+        .transcription-hotspot.type-criticism {
+            border-color: rgba(231, 76, 60, 0.4);
+        }
+        
+        .transcription-hotspot.type-reference {
+            border-color: rgba(52, 152, 219, 0.4);
+        }
+        
+        .transcription-hotspot.type-correction {
+            border-color: rgba(243, 156, 18, 0.4);
+        }
+        
+        .transcription-hotspot.type-note {
+            border-color: rgba(46, 204, 113, 0.4);
+        }
+        
+        /* Legend */
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 3px 0;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 8px;
+            border-radius: 2px;
         }
     </style>
 </head>
 <body>
+    <button class="show-all-toggle" onclick="toggleShowAll()">Show All</button>
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(231, 76, 60, 0.9);"></div>
+            <span>Criticism</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(52, 152, 219, 0.9);"></div>
+            <span>Reference</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(243, 156, 18, 0.9);"></div>
+            <span>Correction</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(46, 204, 113, 0.9);"></div>
+            <span>Note</span>
+        </div>
+    </div>
     <h1>Transcription Viewer</h1>
     <div id="transcription-container">
         <!-- The image and canvas elements will be added here by the script -->
@@ -63,19 +188,44 @@
     <!-- Add any JavaScript files here -->
     <script src="client.js"></script>
     <script>
+        let showAllActive = false;
+        
+        function toggleShowAll() {
+            showAllActive = !showAllActive;
+            const button = document.querySelector('.show-all-toggle');
+            const container = document.getElementById('transcription-container');
+            
+            if (showAllActive) {
+                button.textContent = 'Hide All';
+                container.classList.add('show-all-active');
+                // Show all transcriptions
+                document.querySelectorAll('.transcription').forEach(el => {
+                    el.classList.add('visible');
+                });
+            } else {
+                button.textContent = 'Show All';
+                container.classList.remove('show-all-active');
+                // Hide all transcriptions
+                document.querySelectorAll('.transcription').forEach(el => {
+                    el.classList.remove('visible');
+                });
+            }
+        }
+        
+    </script>
+    <script>
         // Fetch the transcription data
         fetch('/transcriptions')
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error('Network response was not ok');
                 }
                 return response.json();
             })
-            .then(data => {
+            .then(transcriptions => {
                 const container = document.getElementById('transcription-container');
-    
-                // Create an image and a text element for each transcription
-                data.forEach(t => {
+                
+                transcriptions.forEach(t => {
                     const imageContainer = document.createElement('div');
                     imageContainer.className = 'image-container';
     
@@ -92,7 +242,7 @@
                     t.textData.forEach((td, index) => {
                         // Create clickable hotspot area
                         const hotspot = document.createElement('div');
-                        hotspot.className = 'transcription-hotspot';
+                        hotspot.className = `transcription-hotspot type-${td.type || 'note'}`;
                         hotspot.style.left = `${td.left}%`;
                         hotspot.style.top = `${td.top}%`;
                         hotspot.style.width = `${td.width}%`;
@@ -100,7 +250,7 @@
                         
                         // Create text element (initially hidden)
                         const text = document.createElement('div');
-                        text.className = 'transcription';
+                        text.className = `transcription type-${td.type || 'note'}`;
                         text.style.left = `${td.left}%`;
                         text.style.top = `${td.top}%`;
                         text.textContent = td.text;
@@ -109,17 +259,24 @@
                         // Add click handler to hotspot
                         hotspot.onclick = function(e) {
                             e.stopPropagation();
-                            // Hide all other visible text
-                            document.querySelectorAll('.transcription.visible').forEach(el => {
-                                el.classList.remove('visible');
-                            });
-                            // Show this text
-                            text.classList.add('visible');
-                            
-                            // Hide after 5 seconds
-                            setTimeout(() => {
-                                text.classList.remove('visible');
-                            }, 5000);
+                            if (!showAllActive) {
+                                // Hide all other visible text
+                                document.querySelectorAll('.transcription.visible').forEach(el => {
+                                    el.classList.remove('visible');
+                                });
+                                // Show this text with animation
+                                text.classList.add('visible');
+                                
+                                // Hide after 5 seconds if not in show-all mode
+                                setTimeout(() => {
+                                    if (!showAllActive) {
+                                        text.classList.remove('visible');
+                                    }
+                                }, 5000);
+                            } else {
+                                // In show-all mode, just toggle this specific text
+                                text.classList.toggle('visible');
+                            }
                         };
                         
                         // Add click handler to text to hide it

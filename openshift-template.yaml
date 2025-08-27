@@ -1,0 +1,134 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: blake-marginalia-app
+  annotations:
+    description: "Blake Marginalia Viewer Application"
+    tags: "nodejs,express,marginalia"
+    iconClass: "icon-nodejs"
+parameters:
+  - name: APP_NAME
+    displayName: "Application Name"
+    description: "Name of the application"
+    value: "blake-marginalia"
+    required: true
+  - name: GIT_URI
+    displayName: "Git Repository URL"
+    description: "The URL of the repository with your application source code"
+    required: true
+  - name: GIT_REF
+    displayName: "Git Reference"
+    description: "Set this to a branch name, tag or other ref of your repository if you are not using the default branch"
+    value: "main"
+objects:
+  - apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${APP_NAME}
+      labels:
+        app: ${APP_NAME}
+    spec:
+      replicas: 1
+      selector:
+        app: ${APP_NAME}
+      strategy:
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            app: ${APP_NAME}
+        spec:
+          containers:
+          - name: ${APP_NAME}
+            image: ${APP_NAME}:latest
+            ports:
+            - containerPort: 3001
+              protocol: TCP
+            env:
+            - name: NODE_ENV
+              value: "production"
+            resources:
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+            livenessProbe:
+              httpGet:
+                path: /
+                port: 3001
+              initialDelaySeconds: 30
+              timeoutSeconds: 3
+            readinessProbe:
+              httpGet:
+                path: /
+                port: 3001
+              initialDelaySeconds: 3
+              timeoutSeconds: 3
+      triggers:
+      - type: ConfigChange
+      - type: ImageChange
+        imageChangeParams:
+          automatic: true
+          containerNames:
+          - ${APP_NAME}
+          from:
+            kind: ImageStreamTag
+            name: ${APP_NAME}:latest
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${APP_NAME}
+      labels:
+        app: ${APP_NAME}
+    spec:
+      ports:
+      - name: web
+        port: 3001
+        targetPort: 3001
+      selector:
+        app: ${APP_NAME}
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: ${APP_NAME}
+      labels:
+        app: ${APP_NAME}
+    spec:
+      to:
+        kind: Service
+        name: ${APP_NAME}
+      port:
+        targetPort: web
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      name: ${APP_NAME}
+      labels:
+        app: ${APP_NAME}
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      name: ${APP_NAME}
+      labels:
+        app: ${APP_NAME}
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ${APP_NAME}:latest
+      source:
+        git:
+          uri: ${GIT_URI}
+          ref: ${GIT_REF}
+        type: Git
+      strategy:
+        dockerStrategy:
+          dockerfilePath: Dockerfile
+        type: Docker
+      triggers:
+      - type: ConfigChange
+      - github:
+          secret: ${APP_NAME}-webhook-secret
+        type: GitHub

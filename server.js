@@ -107,12 +107,27 @@ function parseXml(xmlData, callback) {
                                                         // Distribute lines vertically within the zone
                                                         const lineTop = topPercent + (index * lineHeight);
                                                         
+                                                        // Determine marginalia type based on content and XML attributes
+                                                        let type = 'note'; // default
+                                                        const trimmedText = text.trim().toLowerCase();
+                                                        
+                                                        if (trimmedText.includes('contemptible') || trimmedText.includes('horrible') || 
+                                                            trimmedText.includes('folly') || trimmedText.includes('dishonest')) {
+                                                            type = 'criticism';
+                                                        } else if (trimmedText.includes('read') || trimmedText.includes('chap') || 
+                                                                  trimmedText.includes('bible') || trimmedText.includes('paine')) {
+                                                            type = 'reference';
+                                                        } else if (marginaliaZone.$.type && marginaliaZone.$.type.includes('deletion')) {
+                                                            type = 'correction';
+                                                        }
+                                                        
                                                         transcription.textData.push({
                                                             text: text.trim(),
                                                             top: lineTop,
                                                             left: leftPercent,
                                                             width: widthPercent,
-                                                            height: lineHeight
+                                                            height: lineHeight,
+                                                            type: type
                                                         });
                                                     }
                                                 });
