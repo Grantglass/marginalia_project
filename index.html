@@ -8,11 +8,50 @@
         .image-container {
             position: relative;
             display: inline-block;
+            max-width: 100%;
+        }
+        
+        .image-container img {
+            display: block;
+            max-width: 100%;
+            height: auto;
         }
         .transcription {
             position: absolute;
-            color: white;
-            text-shadow: 2px 2px 4px #000000;
+            color: #000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 6px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+            border: 2px solid #333;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9);
+            line-height: 1.0;
+            white-space: nowrap;
+            font-family: Arial, sans-serif;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+            letter-spacing: 0.5px;
+            word-spacing: 2px;
+        }
+        
+        .transcription-hotspot {
+            position: absolute;
+            cursor: pointer;
+            background: rgba(255, 0, 0, 0.05);
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            transition: background 0.2s ease;
+        }
+        
+        .transcription-hotspot:hover {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.4);
+        }
+        
+        .transcription.visible {
+            opacity: 1;
         }
     </style>
 </head>
@@ -22,7 +61,6 @@
         <!-- The image and canvas elements will be added here by the script -->
     </div>
     <!-- Add any JavaScript files here -->
-    <script src="script.js"></script>
     <script src="client.js"></script>
     <script>
         // Fetch the transcription data
@@ -44,21 +82,53 @@
                     const img = document.createElement('img');
                     img.src = t.image;
                     img.alt = t.id;
-                    img.style.width = '100%'; // Set the width of the image to 100%
+                    // Don't set width to 100% to maintain aspect ratio
                     img.onerror = function() {
                         console.error(`Failed to load image: ${t.image}`);
                     };
                     img.onclick = function() { onImageClick(t.id); };
                     imageContainer.appendChild(img);
     
-                    t.textData.forEach(td => {
+                    t.textData.forEach((td, index) => {
+                        // Create clickable hotspot area
+                        const hotspot = document.createElement('div');
+                        hotspot.className = 'transcription-hotspot';
+                        hotspot.style.left = `${td.left}%`;
+                        hotspot.style.top = `${td.top}%`;
+                        hotspot.style.width = `${td.width}%`;
+                        hotspot.style.height = `${td.height}%`;
+                        
+                        // Create text element (initially hidden)
                         const text = document.createElement('div');
                         text.className = 'transcription';
-                        text.style.left = `${td.left}%`; // Set the left style to the left value as a percentage
-                        text.style.top = `${td.top}%`; // Set the top style to the top value as a percentage
-                        text.style.width = `${td.width}%`; // Set the width style to the width value as a percentage
-                        text.style.height = `${td.height}%`; // Set the height style to the height value as a percentage
+                        text.style.left = `${td.left}%`;
+                        text.style.top = `${td.top}%`;
                         text.textContent = td.text;
+                        text.id = `text-${t.id}-${index}`;
+                        
+                        // Add click handler to hotspot
+                        hotspot.onclick = function(e) {
+                            e.stopPropagation();
+                            // Hide all other visible text
+                            document.querySelectorAll('.transcription.visible').forEach(el => {
+                                el.classList.remove('visible');
+                            });
+                            // Show this text
+                            text.classList.add('visible');
+                            
+                            // Hide after 5 seconds
+                            setTimeout(() => {
+                                text.classList.remove('visible');
+                            }, 5000);
+                        };
+                        
+                        // Add click handler to text to hide it
+                        text.onclick = function(e) {
+                            e.stopPropagation();
+                            text.classList.remove('visible');
+                        };
+                        
+                        imageContainer.appendChild(hotspot);
                         imageContainer.appendChild(text);
                     });
     

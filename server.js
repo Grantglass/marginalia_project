@@ -2,14 +2,33 @@ const express = require('express');
 const fs = require('fs');
 const xml2js = require('xml2js');
 const app = express();
-const port = process.env.PORT
+const port = process.env.PORT || 3001
 const path = require('path');
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from the current directory
+app.use(express.static(__dirname));
 
 // Serve static files from the 'images' directory
 app.use('/images', express.static(path.join(__dirname, 'images')));
+
+// Route to serve transcription data as JSON
+app.get('/transcriptions', (req, res) => {
+    fs.readFile('BB749.1.ms.xml', 'utf8', (err, xmlData) => {
+        if (err) {
+            res.status(500).json({ error: 'Error reading XML file' });
+            return;
+        }
+
+        parseXml(xmlData, (err, transcriptions) => {
+            if (err) {
+                res.status(500).json({ error: 'Error parsing XML file' });
+                return;
+            }
+
+            res.json(transcriptions || []);
+        });
+    });
+});
 
 // Start the server
 app.listen(port, () => {
@@ -28,57 +47,82 @@ function parseXml(xmlData, callback) {
             if (result && result.bad && result.bad.objdesc && result.bad.objdesc[0]) {
                 const desc = result.bad.objdesc[0].desc;
                 if (desc) {
-                    const transcriptions = desc
-                        .filter(Boolean)
-                        .map(line => {
-                            if (line && line.phystext && line.phystext[0] && line.phystext[0].zone) {
-                                const zone = line.phystext[0].zone[0];
-                                if (zone.zone && zone.zone[0] && zone.zone[0].lg && zone.zone[0].lg[0]) {
-                                    const lg = zone.zone[0].lg[0];
-                                    const dbi = result.bad.objdesc[0].desc[0].$ && result.bad.objdesc[0].desc[0].$.dbi ? result.bad.objdesc[0].desc[0].$.dbi : result.bad.$.id;
-                                    const transcription = {
-                                        id: result.bad.$.id,
-                                        image: `${dbi}.300.jpg`,
-                                        textData: []
-                                    };
-                                    if (lg.l && Array.isArray(lg.l)) {
-                                        lg.l.forEach(l => {
-                                            console.log('Processing line:', l);
-                                            if (zone.$ && zone.$.points) {
-                                                const points = zone.$.points.split(' ').map(point => point.split(',').map(Number));
-                                                const top = Math.min(points[0][1], points[1][1], points[2][1], points[3][1]);
-                                                const left = Math.min(points[0][0], points[1][0], points[2][0], points[3][0]);
-                                                const width = Math.max(points[0][0], points[1][0], points[2][0], points[3][0]) - left;
-                                                const height = Math.max(points[0][1], points[1][1], points[2][1], points[3][1]) - top;
-                                                if (l._ !== undefined) {
-                                                    transcription.textData.push({
-                                                        text: l._,
-                                                        top,
-                                                        left,
-                                                        width,
-                                                        height
-                                                    });
-                                                } else if (l !== undefined) {
-                                                    transcription.textData.push({
-                                                        text: l,
-                                                        top,
-                                                        left,
-                                                        width,
-                                                        height
-                                                    });
-                                                } else {
-                                                    console.log('No text data found for line:', l);
+                    const transcriptions = [];
+                    
+                    desc.forEach(page => {
+                        if (page && page.phystext && page.phystext[0] && page.phystext[0].zone && page.$) {
+                            const pageId = page.$.id;
+                            const dbi = page.$.dbi;
+                            const zones = page.phystext[0].zone;
+                            
+                            if (dbi) {
+                                zones.forEach(zone => {
+                                    // Look for Blake marginalia zones
+                                    if (zone.$ && zone.$.type === 'Blake' && zone.zone) {
+                                        zone.zone.forEach(marginaliaZone => {
+                                            if (marginaliaZone.$ && marginaliaZone.$.points && marginaliaZone.lg && marginaliaZone.lg[0] && marginaliaZone.lg[0].l) {
+                                                const points = marginaliaZone.$.points.split(' ').map(point => point.split(',').map(Number));
+                                                const top = Math.min(...points.map(p => p[1]));
+                                                const left = Math.min(...points.map(p => p[0]));
+                                                const width = Math.max(...points.map(p => p[0])) - left;
+                                                const height = Math.max(...points.map(p => p[1])) - top;
+                                                
+                                                // Convert to percentages (using standard image dimensions)
+                                                const imageWidth = 5457;   
+                                                const imageHeight = 4699;  
+                                                let topPercent = (top / imageHeight) * 100;
+                                                const leftPercent = (left / imageWidth) * 100;
+                                                const widthPercent = (width / imageWidth) * 100;
+                                                const heightPercent = (height / imageHeight) * 100;
+                                                
+                                                // Page-specific coordinate adjustments
+                                                if (pageId === 'bb749.1.ms.01') {
+                                                    // Title page needs adjustment - move up by ~3 lines
+                                                    topPercent = Math.max(0, topPercent - 3); // Adjust upward by ~3%, but not below 0
                                                 }
-                                            } else {
-                                                console.log('No points data found for zone:', zone);
+                                                
+                                                const lines = marginaliaZone.lg[0].l;
+                                                const lineHeight = heightPercent / lines.length;
+                                                
+                                                lines.forEach((l, index) => {
+                                                    let text = '';
+                                                    if (l._ !== undefined) {
+                                                        text = l._;
+                                                    } else if (typeof l === 'string') {
+                                                        text = l;
+                                                    }
+                                                    
+                                                    if (text.trim()) {
+                                                        // Find or create transcription for this specific image
+                                                        let transcription = transcriptions.find(t => t.id === pageId);
+                                                        if (!transcription) {
+                                                            transcription = {
+                                                                id: pageId,
+                                                                image: `/images/${dbi}.300.jpg`,
+                                                                textData: []
+                                                            };
+                                                            transcriptions.push(transcription);
+                                                        }
+                                                        
+                                                        // Distribute lines vertically within the zone
+                                                        const lineTop = topPercent + (index * lineHeight);
+                                                        
+                                                        transcription.textData.push({
+                                                            text: text.trim(),
+                                                            top: lineTop,
+                                                            left: leftPercent,
+                                                            width: widthPercent,
+                                                            height: lineHeight
+                                                        });
+                                                    }
+                                                });
                                             }
                                         });
                                     }
-                                    return transcription;
-                                }    
+                                });
                             }
-                        })
-                        .filter(Boolean);
+                        }
+                    });
             
                     console.log('Transcriptions extracted:', transcriptions);
                     callback(null, transcriptions);
