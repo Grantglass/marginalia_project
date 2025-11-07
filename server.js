@@ -1,192 +1,258 @@
+/**
+ * Marginalia Project Server
+ * Serves William Blake manuscript annotations with improved security,
+ * error handling, and performance optimizations
+ */
+
 const express = require('express');
-const fs = require('fs');
-const xml2js = require('xml2js');
-const app = express();
-const port = process.env.PORT || 3001
+const helmet = require('helmet');
+const cors = require('cors');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 
-// Serve static files from the current directory
+const config = require('./config/config');
+const logger = require('./utils/logger');
+const xmlParser = require('./services/xmlParser');
+
+// Initialize Express application
+const app = express();
+
+// =============================================================================
+// Middleware Configuration
+// =============================================================================
+
+// Security headers
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// CORS configuration
+app.use(
+  cors({
+    origin: config.cors.origin,
+    credentials: config.cors.credentials,
+  })
+);
+
+// Compression for responses
+app.use(compression());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.maxRequests,
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/transcriptions', limiter);
+
+// Body parsing
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Static file serving
 app.use(express.static(__dirname));
+app.use('/images', express.static(path.join(__dirname, config.images.directory)));
 
-// Serve static files from the 'images' directory
-app.use('/images', express.static(path.join(__dirname, 'images')));
-
-// Route to serve transcription data as JSON
-app.get('/transcriptions', (req, res) => {
-    fs.readFile('BB749.1.ms.xml', 'utf8', (err, xmlData) => {
-        if (err) {
-            res.status(500).json({ error: 'Error reading XML file' });
-            return;
-        }
-
-        parseXml(xmlData, (err, transcriptions) => {
-            if (err) {
-                res.status(500).json({ error: 'Error parsing XML file' });
-                return;
-            }
-
-            res.json(transcriptions || []);
-        });
-    });
+// Request logging middleware
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.path}`, {
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+  });
+  next();
 });
 
-// Start the server
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+// =============================================================================
+// Routes
+// =============================================================================
+
+/**
+ * Health check endpoint
+ * Returns server status and cache information
+ */
+app.get('/health', async (req, res) => {
+  try {
+    const cacheStatus = xmlParser.getCacheStatus();
+
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: config.server.env,
+      cache: cacheStatus,
+    });
+  } catch (error) {
+    logger.error('Health check failed:', error);
+    res.status(503).json({
+      status: 'unhealthy',
+      error: 'Service temporarily unavailable',
+    });
+  }
 });
 
-function parseXml(xmlData, callback) {
-    const parser = new xml2js.Parser();
-    parser.parseString(xmlData, (err, result) => {
-        if (err) {
-            console.error('Error in parseString:', err);
-            callback(err);
-        } else {
-            console.log('XML parsed successfully:', result);
-
-            if (result && result.bad && result.bad.objdesc && result.bad.objdesc[0]) {
-                const desc = result.bad.objdesc[0].desc;
-                if (desc) {
-                    const transcriptions = [];
-                    
-                    desc.forEach(page => {
-                        if (page && page.phystext && page.phystext[0] && page.phystext[0].zone && page.$) {
-                            const pageId = page.$.id;
-                            const dbi = page.$.dbi;
-                            const zones = page.phystext[0].zone;
-                            
-                            if (dbi) {
-                                zones.forEach(zone => {
-                                    // Look for Blake marginalia zones
-                                    if (zone.$ && zone.$.type === 'Blake' && zone.zone) {
-                                        zone.zone.forEach(marginaliaZone => {
-                                            if (marginaliaZone.$ && marginaliaZone.$.points && marginaliaZone.lg && marginaliaZone.lg[0] && marginaliaZone.lg[0].l) {
-                                                const points = marginaliaZone.$.points.split(' ').map(point => point.split(',').map(Number));
-                                                const top = Math.min(...points.map(p => p[1]));
-                                                const left = Math.min(...points.map(p => p[0]));
-                                                const width = Math.max(...points.map(p => p[0])) - left;
-                                                const height = Math.max(...points.map(p => p[1])) - top;
-                                                
-                                                // Convert to percentages (using standard image dimensions)
-                                                const imageWidth = 5457;   
-                                                const imageHeight = 4699;  
-                                                let topPercent = (top / imageHeight) * 100;
-                                                const leftPercent = (left / imageWidth) * 100;
-                                                const widthPercent = (width / imageWidth) * 100;
-                                                const heightPercent = (height / imageHeight) * 100;
-                                                
-                                                // Page-specific coordinate adjustments
-                                                if (pageId === 'bb749.1.ms.01') {
-                                                    // Title page needs adjustment - move up by ~3 lines
-                                                    topPercent = Math.max(0, topPercent - 3); // Adjust upward by ~3%, but not below 0
-                                                }
-                                                
-                                                const lines = marginaliaZone.lg[0].l;
-                                                const lineHeight = heightPercent / lines.length;
-                                                
-                                                lines.forEach((l, index) => {
-                                                    let text = '';
-                                                    if (l._ !== undefined) {
-                                                        text = l._;
-                                                    } else if (typeof l === 'string') {
-                                                        text = l;
-                                                    }
-                                                    
-                                                    if (text.trim()) {
-                                                        // Find or create transcription for this specific image
-                                                        let transcription = transcriptions.find(t => t.id === pageId);
-                                                        if (!transcription) {
-                                                            transcription = {
-                                                                id: pageId,
-                                                                image: `/images/${dbi}.300.jpg`,
-                                                                textData: []
-                                                            };
-                                                            transcriptions.push(transcription);
-                                                        }
-                                                        
-                                                        // Distribute lines vertically within the zone
-                                                        const lineTop = topPercent + (index * lineHeight);
-                                                        
-                                                        // Determine marginalia type based on content and XML attributes
-                                                        let type = 'note'; // default
-                                                        const trimmedText = text.trim().toLowerCase();
-                                                        
-                                                        if (trimmedText.includes('contemptible') || trimmedText.includes('horrible') || 
-                                                            trimmedText.includes('folly') || trimmedText.includes('dishonest')) {
-                                                            type = 'criticism';
-                                                        } else if (trimmedText.includes('read') || trimmedText.includes('chap') || 
-                                                                  trimmedText.includes('bible') || trimmedText.includes('paine')) {
-                                                            type = 'reference';
-                                                        } else if (marginaliaZone.$.type && marginaliaZone.$.type.includes('deletion')) {
-                                                            type = 'correction';
-                                                        }
-                                                        
-                                                        transcription.textData.push({
-                                                            text: text.trim(),
-                                                            top: lineTop,
-                                                            left: leftPercent,
-                                                            width: widthPercent,
-                                                            height: lineHeight,
-                                                            type: type
-                                                        });
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        }
-                    });
-            
-                    console.log('Transcriptions extracted:', transcriptions);
-                    callback(null, transcriptions);
-                }
-            }   
-        }
-    });
-}
-// Route for the main page
+/**
+ * Main page route
+ * Serves the HTML interface
+ */
 app.get('/', (req, res) => {
-    // Read XML file (for this example, the XML is expected to be in 'example.xml')
-    fs.readFile('BB749.1.ms.xml', 'utf8', (err, xmlData) => {
-        if (err) {
-            res.status(500).send('Error reading XML file');
-            return;
-        }
-
-        // Parse the XML data
-        parseXml(xmlData, (err, transcriptions) => {
-            if (err) {
-                res.status(500).send('Error parsing XML file');
-                return;
-            }
-
-            // Generate HTML for each image with transcriptions
-            const imagesHtml = transcriptions.map(t => {
-                const transcriptionHtml = t.textData.map(td => 
-                    `<div style="position: absolute; left: ${td.x}px; top: ${td.y}px;">${td.text}</div>`
-                ).join('');
-
-                console.log('Image URL:', `/images/${t.image}`); // Log the image URL
-
-                return `
-                    <div style="position: relative; margin-bottom: 20px;">
-                        <img src="/images/${t.image}" alt="${t.id}" style="position: relative;">
-                        ${transcriptionHtml}
-                    </div>
-                `;
-            }).join('');
-
-            // Send the HTML response
-            res.send(`
-                <html>
-                    <head><title>Transcription Overlay</title></head>
-                    <body>${imagesHtml}</body>
-                </html>
-            `);
-        });
-    });
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+/**
+ * Transcriptions API endpoint
+ * Returns all transcription data as JSON
+ */
+app.get('/transcriptions', async (req, res) => {
+  try {
+    const forceRefresh = req.query.refresh === 'true';
+    const transcriptions = await xmlParser.getTranscriptions(
+      config.xml.filePath,
+      forceRefresh
+    );
 
+    res.json(transcriptions);
+  } catch (error) {
+    logger.error('Error fetching transcriptions:', error);
+    res.status(500).json({
+      error: 'Failed to fetch transcriptions',
+      message: config.server.isProduction ? 'Internal server error' : error.message,
+    });
+  }
+});
+
+/**
+ * Cache management endpoint
+ * Allows manual cache clearing (useful for development)
+ */
+app.post('/cache/clear', async (req, res) => {
+  try {
+    xmlParser.clearCache();
+    logger.info('Cache cleared manually');
+
+    res.json({
+      success: true,
+      message: 'Cache cleared successfully',
+    });
+  } catch (error) {
+    logger.error('Error clearing cache:', error);
+    res.status(500).json({
+      error: 'Failed to clear cache',
+    });
+  }
+});
+
+/**
+ * Cache status endpoint
+ * Returns current cache information
+ */
+app.get('/cache/status', (req, res) => {
+  try {
+    const status = xmlParser.getCacheStatus();
+    res.json(status);
+  } catch (error) {
+    logger.error('Error getting cache status:', error);
+    res.status(500).json({
+      error: 'Failed to get cache status',
+    });
+  }
+});
+
+// =============================================================================
+// Error Handling
+// =============================================================================
+
+/**
+ * 404 handler
+ */
+app.use((req, res) => {
+  logger.warn(`404 - Not Found: ${req.method} ${req.path}`);
+  res.status(404).json({
+    error: 'Not Found',
+    message: `Cannot ${req.method} ${req.path}`,
+  });
+});
+
+/**
+ * Global error handler
+ */
+app.use((err, req, res, next) => {
+  logger.error('Unhandled error:', err);
+
+  const statusCode = err.statusCode || 500;
+  const message = config.server.isProduction
+    ? 'Internal server error'
+    : err.message;
+
+  res.status(statusCode).json({
+    error: 'Server Error',
+    message,
+    ...(config.server.isProduction ? {} : { stack: err.stack }),
+  });
+});
+
+// =============================================================================
+// Server Initialization
+// =============================================================================
+
+/**
+ * Graceful shutdown handler
+ */
+function gracefulShutdown(signal) {
+  logger.info(`${signal} received, shutting down gracefully`);
+
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
+
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    logger.error('Forced shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+}
+
+/**
+ * Start server (only if not being required as a module)
+ */
+let server;
+
+if (require.main === module) {
+  server = app.listen(config.server.port, () => {
+    logger.info(`Server running on port ${config.server.port}`);
+    logger.info(`Environment: ${config.server.env}`);
+    logger.info(`Cache TTL: ${config.xml.cacheTTL}ms`);
+  });
+
+  // Handle shutdown signals
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error);
+    process.exit(1);
+  });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+  });
+}
+
+// Export app for testing
+module.exports = app;

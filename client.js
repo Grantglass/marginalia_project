@@ -1,19 +1,31 @@
-// client.js
+/**
+ * Client-side JavaScript utilities
+ * Currently, all interactive functionality is implemented inline in index.html
+ * This file is reserved for future client-side enhancements
+ */
 
-// This function is called when an image is clicked
-function onImageClick(imageId) {
-    // Send a GET request to the server to get the transcriptions for the selected image
-    fetch(`/transcriptions/${imageId}`)
-        .then(response => response.json())
-        .then(transcriptions => {
-            // Now you have the transcriptions for the selected image
-            // You can display them on the page in any way you want
-            displayTranscriptions(transcriptions);
-        });
+// Utility function to format dates
+function formatDate(timestamp) {
+  return new Date(timestamp).toLocaleString();
 }
 
-// This function displays the transcriptions on the page
-function displayTranscriptions(transcriptions) {
-    // This is just a placeholder - replace it with your actual code
-    console.log(transcriptions);
+// Utility function for debouncing
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Export for potential module usage
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    formatDate,
+    debounce,
+  };
 }
